@@ -2,11 +2,6 @@ package com.soloarise.plugin.models;
 
 import org.bukkit.entity.Player;
 
-@FunctionalInterface
-public interface TaskCompletionChecker {
-    boolean isComplete(Player player, ArisePlayer arisePlayer);
-}
-
 public class Task {
     
     private final int id;
@@ -19,10 +14,20 @@ public class Task {
         this.completionCondition = completionCondition;
     }
     
-    public int getId() { return id; }
-    public String getName() { return name; }
+    public int getId() {
+        return id;
+    }
+    
+    public String getName() {
+        return name;
+    }
     
     public boolean isComplete(Player player, ArisePlayer arisePlayer) {
         return completionCondition.isComplete(player, arisePlayer);
+    }
+    
+    @Override
+    public String toString() {
+        return "Task{id=" + id + ", name='" + name + "'}";
     }
 }
