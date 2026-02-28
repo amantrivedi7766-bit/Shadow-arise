@@ -1,1 +1,36 @@
-# Messages configuration file
+# messages.yml
+prefix: "&8[&5SoloArise&8] &r"
+
+commands:
+  no-permission: "&cYou don't have permission to use this command!"
+  player-only: "&cOnly players can use this command!"
+  invalid-usage: "&cInvalid usage! &7%s"
+
+arise:
+  power-unlocked: "&a✓ &fYou have unlocked the &dArise Power&f!"
+  task-assigned: "&a✦ &fNew Task: &e%s"
+  task-completed: "&a✓ &fTask completed! Use &e/arise &fto claim your power!"
+  task-expired: "&c✗ &fYour task has expired!"
+  capture-success: "&a✓ &fSuccessfully captured &e%s&f's soul! &7(Rank: %s)"
+  capture-failed: "&c✗ &fFailed to capture soul. Attempt &e%s&7/3"
+  capture-permanent-fail: "&4✗ &fThis soul is now lost forever!"
+  no-target: "&cLook at a mob or player to capture their soul!"
+
+souls:
+  not-found: "&cSoul not found!"
+  no-energy: "&cThis soul doesn't have enough energy!"
+  healed: "&a✓ &e%s &fhas been healed!"
+  released: "&a✓ &fSoul released successfully!"
+  recalled: "&d✦ &fAll souls recalled to shadow state!"
+  working: "&a✦ &e%s &fis now working on: &7%s"
+  max-souls: "&cYou have reached the maximum number of souls!"
+
+tasks:
+  assigned: "&a✦ &fNew Task: &e%s"
+  progress: "&7Progress: &e%s&7/&e%s"
+  time-left: "&7Time left: &e%s"
+
+errors:
+  player-not-found: "&cPlayer not found or offline!"
+  cooldown: "&cPlease wait &e%s &cseconds before using this again!"
+  database-error: "&cA database error occurred! Please contact an admin."
