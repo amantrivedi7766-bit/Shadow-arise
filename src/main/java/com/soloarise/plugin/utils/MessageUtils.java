@@ -1,5 +1,7 @@
 package com.soloarise.plugin.utils;
 
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -23,7 +25,7 @@ public class MessageUtils {
     }
     
     public static void sendActionBar(Player player, String message) {
-        player.sendActionBar(colorize(message));
+        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(colorize(message)));
     }
     
     public static String formatTime(long seconds) {
