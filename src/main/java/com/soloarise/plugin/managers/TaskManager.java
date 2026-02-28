@@ -3,7 +3,9 @@ package com.soloarise.plugin.managers;
 import com.soloarise.plugin.SoloArisePlugin;
 import com.soloarise.plugin.models.ArisePlayer;
 import com.soloarise.plugin.models.Task;
+import com.soloarise.plugin.models.TaskCompletionChecker;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -24,78 +26,155 @@ public class TaskManager {
     }
     
     private void loadTasks() {
-        // 60+ unique tasks
-        availableTasks.add(new Task(1, "Mine 64 Diamonds", 
-            (p, ap) -> p.getInventory().contains(org.bukkit.Material.DIAMOND, 64)));
+        // Task 1: Mine 64 Diamonds
+        availableTasks.add(new Task(1, "Mine 64 Diamonds", new TaskCompletionChecker() {
+            @Override
+            public boolean isComplete(Player player, ArisePlayer arisePlayer) {
+                return player.getInventory().contains(Material.DIAMOND, 64);
+            }
+        }));
         
-        availableTasks.add(new Task(2, "Kill 50 Zombies", 
-            (p, ap) -> ap.getKillCount("ZOMBIE") >= 50));
+        // Task 2: Kill 50 Zombies
+        availableTasks.add(new Task(2, "Kill 50 Zombies", new TaskCompletionChecker() {
+            @Override
+            public boolean isComplete(Player player, ArisePlayer arisePlayer) {
+                return arisePlayer.getKillCount("ZOMBIE") >= 50;
+            }
+        }));
         
-        availableTasks.add(new Task(3, "Travel 5000 Blocks", 
-            (p, ap) -> ap.getDistanceTraveled() >= 5000));
+        // Task 3: Travel 5000 Blocks
+        availableTasks.add(new Task(3, "Travel 5000 Blocks", new TaskCompletionChecker() {
+            @Override
+            public boolean isComplete(Player player, ArisePlayer arisePlayer) {
+                return arisePlayer.getDistanceTraveled() >= 5000;
+            }
+        }));
         
-        availableTasks.add(new Task(4, "Catch 20 Fish", 
-            (p, ap) -> ap.getFishCaught() >= 20));
+        // Task 4: Catch 20 Fish
+        availableTasks.add(new Task(4, "Catch 20 Fish", new TaskCompletionChecker() {
+            @Override
+            public boolean isComplete(Player player, ArisePlayer arisePlayer) {
+                return arisePlayer.getFishCaught() >= 20;
+            }
+        }));
         
-        availableTasks.add(new Task(5, "Brew 10 Potions", 
-            (p, ap) -> ap.getPotionsBrewed() >= 10));
+        // Task 5: Brew 10 Potions
+        availableTasks.add(new Task(5, "Brew 10 Potions", new TaskCompletionChecker() {
+            @Override
+            public boolean isComplete(Player player, ArisePlayer arisePlayer) {
+                return arisePlayer.getPotionsBrewed() >= 10;
+            }
+        }));
         
-        availableTasks.add(new Task(6, "Enchant 15 Items", 
-            (p, ap) -> ap.getItemsEnchanted() >= 15));
+        // Task 6: Enchant 15 Items
+        availableTasks.add(new Task(6, "Enchant 15 Items", new TaskCompletionChecker() {
+            @Override
+            public boolean isComplete(Player player, ArisePlayer arisePlayer) {
+                return arisePlayer.getItemsEnchanted() >= 15;
+            }
+        }));
         
-        availableTasks.add(new Task(7, "Trade with Villagers 30 times", 
-            (p, ap) -> ap.getVillagerTrades() >= 30));
+        // Task 7: Trade with Villagers 30 times
+        availableTasks.add(new Task(7, "Trade with Villagers 30 times", new TaskCompletionChecker() {
+            @Override
+            public boolean isComplete(Player player, ArisePlayer arisePlayer) {
+                return arisePlayer.getVillagerTrades() >= 30;
+            }
+        }));
         
-        availableTasks.add(new Task(8, "Plant and Harvest 100 Crops", 
-            (p, ap) -> ap.getCropsHarvested() >= 100));
+        // Task 8: Plant and Harvest 100 Crops
+        availableTasks.add(new Task(8, "Plant and Harvest 100 Crops", new TaskCompletionChecker() {
+            @Override
+            public boolean isComplete(Player player, ArisePlayer arisePlayer) {
+                return arisePlayer.getCropsHarvested() >= 100;
+            }
+        }));
         
-        availableTasks.add(new Task(9, "Defeat the Ender Dragon", 
-            (p, ap) -> ap.hasDefeatedEnderDragon()));
+        // Task 9: Defeat the Ender Dragon
+        availableTasks.add(new Task(9, "Defeat the Ender Dragon", new TaskCompletionChecker() {
+            @Override
+            public boolean isComplete(Player player, ArisePlayer arisePlayer) {
+                return arisePlayer.hasDefeatedEnderDragon();
+            }
+        }));
         
-        availableTasks.add(new Task(10, "Collect 16 Gold Blocks", 
-            (p, ap) -> p.getInventory().contains(org.bukkit.Material.GOLD_BLOCK, 16)));
+        // Task 10: Collect 16 Gold Blocks
+        availableTasks.add(new Task(10, "Collect 16 Gold Blocks", new TaskCompletionChecker() {
+            @Override
+            public boolean isComplete(Player player, ArisePlayer arisePlayer) {
+                return player.getInventory().contains(Material.GOLD_BLOCK, 16);
+            }
+        }));
         
-        // Add 50 more tasks
-        for (int i = 11; i <= 60; i++) {
-            availableTasks.add(generateRandomTask(i));
-        }
+        // Add 50 more tasks using lambda expressions (Java 8+)
+        addMoreTasks();
     }
     
-    private Task generateRandomTask(int id) {
-        String[] tasks = {
-            "Kill 30 Skeletons", "Mine 100 Iron Ore", "Craft 50 Torches",
-            "Cook 64 Steaks", "Shear 20 Sheep", "Milk 10 Cows",
-            "Ride a Pig 100 blocks", "Climb a Mountain (Y=150)", "Dive to Ocean Floor",
-            "Find a Desert Temple", "Locate a Jungle Temple", "Defeat a Raid",
-            "Tame 5 Wolves", "Breed 10 Animals", "Fly with Elytra 1000 blocks",
-            "Survive a Fall from Height", "Swim 1000 blocks", "Craft a Beacon",
-            "Find Ancient Debris", "Create a Nether Portal", "Trade with Piglins 20 times",
-            "Defeat a Wither Skeleton", "Collect Blaze Rods", "Find a Stronghold",
-            "Open an Ender Chest", "Use a Grindstone 10 times", "Smith 15 Tools",
-            "Fish a Treasure Item", "Find a Shipwreck", "Locate a Buried Treasure",
-            "Ride a Strider", "Explore a Bastion", "Visit a Nether Fortress",
-            "Collect 32 Quartz", "Mine 16 Ancient Debris", "Create 10 Soul Torches",
-            "Harvest Honey from 5 Beehives", "Plant 50 Saplings", "Trade with a Wandering Trader",
-            "Defeat a Ravager", "Kill 10 Vindicators", "Collect 20 Emeralds",
-            "Build a Iron Golem", "Create a Snow Golem", "Light a Campfire 10 times",
-            "Bake 32 Bread", "Make 16 Cookies", "Craft a Cake",
-            "Brew a Potion of Strength", "Brew a Potion of Swiftness", "Catch 10 Tropical Fish",
-            "Find a Coral Reef", "Explore a Cave", "Mine 256 Cobblestone",
+    private void addMoreTasks() {
+        // Using lambda expressions for cleaner code
+        availableTasks.add(new Task(11, "Kill 30 Skeletons", 
+            (player, ap) -> ap.getKillCount("SKELETON") >= 30));
+        
+        availableTasks.add(new Task(12, "Mine 100 Iron Ore", 
+            (player, ap) -> ap.getBlocksMined() >= 100));
+        
+        availableTasks.add(new Task(13, "Craft 50 Torches", 
+            (player, ap) -> ap.getItemsCrafted() >= 50));
+        
+        availableTasks.add(new Task(14, "Cook 64 Steaks", 
+            (player, ap) -> player.getInventory().contains(Material.COOKED_BEEF, 64)));
+        
+        availableTasks.add(new Task(15, "Shear 20 Sheep", 
+            (player, ap) -> false)); // Placeholder - implement actual tracking
+        
+        availableTasks.add(new Task(16, "Milk 10 Cows", 
+            (player, ap) -> false)); // Placeholder
+        
+        availableTasks.add(new Task(17, "Ride a Pig 100 blocks", 
+            (player, ap) -> false)); // Placeholder
+        
+        availableTasks.add(new Task(18, "Climb a Mountain (Y=150)", 
+            (player, ap) -> player.getLocation().getY() >= 150));
+        
+        availableTasks.add(new Task(19, "Dive to Ocean Floor", 
+            (player, ap) -> player.getLocation().getY() <= 30 && player.getWorld().getEnvironment() == org.bukkit.World.Environment.NORMAL));
+        
+        availableTasks.add(new Task(20, "Find a Desert Temple", 
+            (player, ap) -> false)); // Placeholder
+        
+        // Add more tasks up to 60
+        String[] taskNames = {
             "Kill 40 Spiders", "Kill 25 Creepers", "Kill 15 Endermen",
             "Enter the Nether", "Enter the End", "Collect 32 Leather",
-            "Collect 64 String", "Collect 32 Gunpowder", "Collect 16 Ender Pearls"
+            "Collect 64 String", "Collect 32 Gunpowder", "Collect 16 Ender Pearls",
+            "Find a Jungle Temple", "Defeat a Raid", "Tame 5 Wolves",
+            "Breed 10 Animals", "Fly with Elytra 1000 blocks", "Survive a Fall from Height",
+            "Swim 1000 blocks", "Craft a Beacon", "Find Ancient Debris",
+            "Create a Nether Portal", "Trade with Piglins 20 times", "Defeat a Wither Skeleton",
+            "Collect Blaze Rods", "Find a Stronghold", "Open an Ender Chest",
+            "Use a Grindstone 10 times", "Smith 15 Tools", "Fish a Treasure Item",
+            "Find a Shipwreck", "Locate a Buried Treasure", "Ride a Strider",
+            "Explore a Bastion", "Visit a Nether Fortress", "Collect 32 Quartz",
+            "Mine 16 Ancient Debris", "Create 10 Soul Torches", "Harvest Honey from 5 Beehives",
+            "Plant 50 Saplings", "Trade with a Wandering Trader", "Defeat a Ravager",
+            "Kill 10 Vindicators", "Collect 20 Emeralds", "Build an Iron Golem",
+            "Create a Snow Golem", "Light a Campfire 10 times", "Bake 32 Bread",
+            "Make 16 Cookies", "Craft a Cake", "Brew a Potion of Strength",
+            "Brew a Potion of Swiftness", "Catch 10 Tropical Fish", "Find a Coral Reef"
         };
         
-        int index = (id - 11) % tasks.length;
-        String taskName = tasks[index];
-        
-        return new Task(id, taskName, (p, ap) -> {
-            // Simple completion check for random tasks
-            if (taskName.contains("Kill")) return ap.getKillCount("ZOMBIE") >= 30;
-            if (taskName.contains("Mine")) return ap.getBlocksMined() >= 100;
-            if (taskName.contains("Craft")) return ap.getItemsCrafted() >= 50;
-            return Math.random() < 0.3; // Placeholder
-        });
+        for (int i = 0; i < taskNames.length; i++) {
+            int taskId = 21 + i;
+            String taskName = taskNames[i];
+            
+            availableTasks.add(new Task(taskId, taskName, new TaskCompletionChecker() {
+                @Override
+                public boolean isComplete(Player player, ArisePlayer arisePlayer) {
+                    // Simple placeholder - in real implementation, track these stats
+                    return Math.random() < 0.3; // 30% chance for testing
+                }
+            }));
+        }
     }
     
     public Task getUniqueTask() {
