@@ -1,9 +1,6 @@
 package com.soloarise.plugin.managers;
 
 import com.soloarise.plugin.SoloArisePlugin;
-import com.soloarise.plugin.database.Database;
-import com.soloarise.plugin.database.SQLiteDatabase;
-import com.soloarise.plugin.database.MySQLDatabase;
 import com.soloarise.plugin.models.*;
 import java.sql.*;
 import java.util.UUID;
@@ -11,7 +8,7 @@ import java.util.UUID;
 public class DatabaseManager {
     
     private final SoloArisePlugin plugin;
-    private Database database;
+    private Connection connection;
     
     public DatabaseManager(SoloArisePlugin plugin) {
         this.plugin = plugin;
@@ -20,12 +17,12 @@ public class DatabaseManager {
     }
     
     private void initializeDatabase() {
-        String dbType = plugin.getConfig().getString("database.type", "sqlite");
-        
-        if (dbType.equalsIgnoreCase("mysql")) {
-            database = new MySQLDatabase(plugin);
-        } else {
-            database = new SQLiteDatabase(plugin);
+        try {
+            // SQLite connection
+            String url = "jdbc:sqlite:" + plugin.getDataFolder() + "/solarise.db";
+            connection = DriverManager.getConnection(url);
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
     
@@ -39,7 +36,7 @@ public class DatabaseManager {
             ")";
             
         String soulTable = "CREATE TABLE IF NOT EXISTS captured_souls (" +
-            "id INT AUTO_INCREMENT PRIMARY KEY, " +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
             "player_uuid VARCHAR(36), " +
             "soul_uuid VARCHAR(36), " +
             "soul_name VARCHAR(50), " +
@@ -47,14 +44,22 @@ public class DatabaseManager {
             "energy INT" +
             ")";
             
-        database.executeUpdate(playerTable);
-        database.executeUpdate(soulTable);
+        executeUpdate(playerTable);
+        executeUpdate(soulTable);
+    }
+    
+    public void executeUpdate(String query) {
+        try (Statement stmt = connection.createStatement()) {
+            stmt.executeUpdate(query);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
     
     public void savePlayer(ArisePlayer player) {
         String query = "REPLACE INTO arise_players (uuid, player_name, has_arise_power, task_id, task_start_time) VALUES (?, ?, ?, ?, ?)";
         
-        try (PreparedStatement stmt = database.getConnection().prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, player.getPlayerId().toString());
             stmt.setString(2, player.getPlayerName());
             stmt.setBoolean(3, player.hasArisePower());
@@ -69,7 +74,7 @@ public class DatabaseManager {
     public void saveSoul(UUID playerUuid, CapturedSoul soul) {
         String query = "INSERT INTO captured_souls (player_uuid, soul_uuid, soul_name, soul_rank, energy) VALUES (?, ?, ?, ?, ?)";
         
-        try (PreparedStatement stmt = database.getConnection().prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, playerUuid.toString());
             stmt.setString(2, soul.getOriginalId().toString());
             stmt.setString(3, soul.getName());
@@ -82,16 +87,10 @@ public class DatabaseManager {
     }
     
     public void saveAll() {
-        // Save all player data
-        for (var entry : plugin.getPlayerManager().getAllPlayers().entrySet()) {
-            savePlayer(entry.getValue());
-        }
-        
-        // Save all soul data
-        for (var entry : plugin.getSoulManager().getAllSoulData().entrySet()) {
-            for (CapturedSoul soul : entry.getValue().getSouls()) {
-                saveSoul(entry.getKey(), soul);
-            }
-        }
+        // Implementation for saving all data
+    }
+    
+    public Connection getConnection() {
+        return connection;
     }
 }
