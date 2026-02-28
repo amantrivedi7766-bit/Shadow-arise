@@ -42,9 +42,11 @@ public class AriseCommand implements CommandExecutor {
             return true;
         }
         
-        // Ray trace to find target entity
-        RayTraceResult result = player.rayTraceEntities(10);
-        if (result == null || !(result.getHitEntity() instanceof LivingEntity target)) {
+        // Ray trace to find target entity - Fixed for 1.21
+        // Using getTargetEntity method instead of rayTraceEntities
+        LivingEntity target = getTargetEntity(player);
+        
+        if (target == null) {
             player.sendMessage("§cLook at a mob or player to capture their soul!");
             return true;
         }
@@ -52,5 +54,23 @@ public class AriseCommand implements CommandExecutor {
         // Attempt to capture soul
         plugin.getSoulManager().attemptCapture(player, target);
         return true;
+    }
+    
+    private LivingEntity getTargetEntity(Player player) {
+        // Simple method to get the entity the player is looking at
+        // This works across all versions
+        double range = 10.0;
+        RayTraceResult result = player.getWorld().rayTraceEntities(
+            player.getEyeLocation(),
+            player.getEyeLocation().getDirection(),
+            range,
+            entity -> entity instanceof LivingEntity && entity != player
+        );
+        
+        if (result != null && result.getHitEntity() instanceof LivingEntity) {
+            return (LivingEntity) result.getHitEntity();
+        }
+        
+        return null;
     }
 }
