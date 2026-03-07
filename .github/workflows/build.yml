@@ -1,38 +1,134 @@
-name: Build SoloArise
+name: Build SoloArise 1.21.4
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main", "master" ]
   pull_request:
-    branches: [ main ]
+    branches: [ "main", "master" ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+      
+      - name: Build with Maven
+        run: mvn -B clean package --file pom.xml -DskipTests
+      
+      - name: List build artifacts
+        run: |
+          echo "=== Build Artifacts ==="
+          ls -la target/
+          echo "======================="
+      
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SoloArise-1.21.4-Plugin
+          path: target/*.jar
+          if-no-files-found: error
+          retention-days: 90
+      
+      - name: Upload source code
+        uses: actions/upload-artifact@v4
+        with:
+          name: SoloArise-1.21.4-Source
+          path: |
+            src/
+            pom.xml
+            README.md
+            plugin.yml
+            config.yml
+          if-no-files-found: warn
+          retention-days: 90
+      
+      - name: Create Build Summary
+        run: |
+          echo "## ✅ SoloArise 1.21.4 Build Successful" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Build Details:" >> $GITHUB_STEP_SUMMARY
+          echo "- Minecraft Version: 1.21.4" >> $GITHUB_STEP_SUMMARY
+          echo "- Java Version: 21" >> $GITHUB_STEP_SUMMARY
+          echo "- Build Time: $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📥 Downloads:" >> $GITHUB_STEP_SUMMARY
+          echo "- [SoloArise-1.21.4-1.0.0.jar](./SoloArise-1.21.4-1.0.0.jar)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Source Code](./SoloArise-1.21.4-Source.zip)" >> $GITHUB_STEP_SUMMARY
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
     
-    - name: Set up JDK 21
-      uses: actions/setup-java@v4
-      with:
-        java-version: '21'
-        distribution: 'temurin'
-    
-    - name: Build with Maven
-      run: mvn -B clean package --file pom.xml
-    
-    - name: Upload JAR
-      uses: actions/upload-artifact@v4
-      with:
-        name: SoloArise-Plugin
-        path: target/*.jar
-    
-    - name: Upload Source
-      uses: actions/upload-artifact@v4
-      with:
-        name: SoloArise-Source
-        path: |
-          src/
-          pom.xml
-          README.md
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Download JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: SoloArise-1.21.4-Plugin
+          path: ./artifacts
+      
+      - name: Download Source
+        uses: actions/download-artifact@v4
+        with:
+          name: SoloArise-1.21.4-Source
+          path: ./source
+      
+      - name: Create Source ZIP
+        run: |
+          cd source
+          zip -r ../SoloArise-1.21.4-Source-${{ github.ref_name }}.zip .
+          cd ..
+      
+      - name: Get version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: SoloArise 1.21.4 v${{ steps.get_version.outputs.VERSION }}
+          body: |
+            ## 🎯 SoloArise Plugin for Minecraft 1.21.4
+            
+            ### ✨ Features:
+            - ✅ Full 1.21.4 compatibility
+            - ✅ Unique task system (60+ tasks)
+            - ✅ Soul capture with 3 attempts
+            - ✅ Boss mob capture (Warden, Wither, Ender Dragon)
+            - ✅ Soul energy system
+            - ✅ Scoreboard panel
+            - ✅ Particle effects
+            
+            ### 📥 Downloads:
+            - [SoloArise-1.21.4-${{ steps.get_version.outputs.VERSION }}.jar](./SoloArise-1.21.4-${{ steps.get_version.outputs.VERSION }}.jar)
+            - [Source Code](./SoloArise-1.21.4-Source-${{ steps.get_version.outputs.VERSION }}.zip)
+            
+            ### 🔧 Requirements:
+            - Java 21
+            - Paper/Spigot 1.21.4
+            
+            ### 📦 Installation:
+            1. Download the JAR
+            2. Place in `plugins/` folder
+            3. Restart server
+            4. Configure in `plugins/SoloArise/config.yml`
+          files: |
+            ./artifacts/*.jar
+            ./SoloArise-1.21.4-Source-${{ github.ref_name }}.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
