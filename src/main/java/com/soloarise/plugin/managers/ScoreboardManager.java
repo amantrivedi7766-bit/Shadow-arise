@@ -6,6 +6,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.*;
 
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
 public class ScoreboardManager {
     
     private final SoloArisePlugin plugin;
@@ -60,9 +64,12 @@ public class ScoreboardManager {
                 for (CapturedSoul soul : soulData.getSummonedSouls()) {
                     if (soulLine > 0) {
                         String healthBar = getHealthBar(soul.getCurrentHealth(), soul.getMaxHealth());
+                        String name = soul.getName();
+                        if (name.length() > 8) {
+                            name = name.substring(0, 8);
+                        }
                         objective.getScore(" §7- " + soul.getRank().getDisplayName() + 
-                            " §f" + soul.getName().substring(0, Math.min(8, soul.getName().length())) + 
-                            " " + healthBar).setScore(soulLine--);
+                            " §f" + name + " " + healthBar).setScore(soulLine--);
                     }
                 }
             }
