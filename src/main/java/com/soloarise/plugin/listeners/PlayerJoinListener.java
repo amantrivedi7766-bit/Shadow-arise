@@ -26,7 +26,12 @@ public class PlayerJoinListener implements Listener {
         // Load player data
         plugin.getPlayerManager().getPlayer(player);
         
-        // Setup scoreboard
-        plugin.getScoreboardManager().updateScoreboard(player);
+        // Setup main scoreboard
+        plugin.getScoreboardManager().updateMainScoreboard(player);
+        
+        // Setup task scoreboard if player has active task
+        if (plugin.getPlayerManager().getPlayer(player).hasActiveTask()) {
+            plugin.getScoreboardManager().showTaskScoreboard(player);
+        }
     }
 }
