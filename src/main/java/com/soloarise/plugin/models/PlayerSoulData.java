@@ -23,18 +23,8 @@ public class PlayerSoulData {
         }
     }
     
-    public boolean removeSoul(String identifier) {
-        // Check if identifier is UUID
-        try {
-            UUID uuid = UUID.fromString(identifier);
-            return souls.remove(uuid) != null;
-        } catch (IllegalArgumentException e) {
-            // Remove by name or group
-            return souls.values().removeIf(soul -> 
-                soul.getName().equalsIgnoreCase(identifier) || 
-                soul.getGroupName().equalsIgnoreCase(identifier)
-            );
-        }
+    public CapturedSoul getSoulById(UUID soulId) {
+        return souls.get(soulId);
     }
     
     public CapturedSoul getSoulByName(String name) {
@@ -53,6 +43,12 @@ public class PlayerSoulData {
     public List<CapturedSoul> getSoulsByRank(SoulRank rank) {
         return souls.values().stream()
             .filter(s -> s.getRank() == rank)
+            .toList();
+    }
+    
+    public List<CapturedSoul> getSummonedSouls() {
+        return souls.values().stream()
+            .filter(CapturedSoul::isSummoned)
             .toList();
     }
     
