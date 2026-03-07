@@ -1,3 +1,31 @@
 name: SoloArise
 version: 1.0.0
 main: com.soloarise.plugin.SoloArisePlugin
+api-version: 1.21
+author: hellfire
+description: Solo Leveling Arise Power System for SMP 1.21.4
+
+commands:
+  arise:
+    description: Unlock arise power or capture souls
+    usage: /arise
+  arisework:
+    description: Command souls to work
+    usage: /arisework <soulname> <workorder>
+  soulrelease:
+    description: Release captured souls
+    usage: /soulrelease <soulname/groupname>
+  soulattack:
+    description: Attack another player with souls
+    usage: /soulattack <playername>
+  soulcome:
+    description: Recall all souls to shadow state
+    usage: /soulcome
+  soultask:
+    description: Assign tasks to souls
+    usage: /soultask <soulname/groupname> <task>
+
+permissions:
+  solarise.use:
+    description: Allows use of Arise commands
+    default: true
