@@ -27,7 +27,6 @@ public class AriseCommand implements CommandExecutor {
         ArisePlayer arisePlayer = plugin.getPlayerManager().getPlayer(player);
         
         if (!arisePlayer.hasArisePower() && arisePlayer.hasActiveTask()) {
-            // Check if task is complete
             if (plugin.getPlayerManager().completeTask(player)) {
                 player.sendMessage("§aYou have claimed the Arise power!");
                 return true;
@@ -42,8 +41,7 @@ public class AriseCommand implements CommandExecutor {
             return true;
         }
         
-        // Ray trace to find target entity - Fixed for 1.21
-        // Using getTargetEntity method instead of rayTraceEntities
+        // 1.21.4 compatible ray tracing
         LivingEntity target = getTargetEntity(player);
         
         if (target == null) {
@@ -51,24 +49,25 @@ public class AriseCommand implements CommandExecutor {
             return true;
         }
         
-        // Attempt to capture soul
         plugin.getSoulManager().attemptCapture(player, target);
         return true;
     }
     
     private LivingEntity getTargetEntity(Player player) {
-        // Simple method to get the entity the player is looking at
-        // This works across all versions
-        double range = 10.0;
-        RayTraceResult result = player.getWorld().rayTraceEntities(
-            player.getEyeLocation(),
-            player.getEyeLocation().getDirection(),
-            range,
-            entity -> entity instanceof LivingEntity && entity != player
-        );
-        
-        if (result != null && result.getHitEntity() instanceof LivingEntity) {
-            return (LivingEntity) result.getHitEntity();
+        try {
+            // 1.21.4 method
+            RayTraceResult result = player.rayTraceEntities(10);
+            if (result != null && result.getHitEntity() instanceof LivingEntity) {
+                return (LivingEntity) result.getHitEntity();
+            }
+        } catch (NoSuchMethodError e) {
+            // Fallback for older versions
+            return player.getWorld().rayTraceEntities(
+                player.getEyeLocation(),
+                player.getEyeLocation().getDirection(),
+                10,
+                entity -> entity instanceof LivingEntity && entity != player
+            ).getHitEntity() instanceof LivingEntity hit ? hit : null;
         }
         
         return null;
