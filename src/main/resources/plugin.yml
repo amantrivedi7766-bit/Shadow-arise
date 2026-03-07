@@ -2,7 +2,7 @@ name: SoloArise
 version: 1.0.0
 main: com.soloarise.plugin.SoloArisePlugin
 api-version: 1.21
-author: YourName
+author: MineTwice
 description: Solo Leveling Arise Power System for SMP 1.21.4
 
 commands:
@@ -24,6 +24,9 @@ commands:
   soultask:
     description: Assign tasks to souls
     usage: /soultask <soulname/groupname> <task>
+  summon:
+    description: Summon a selected soul
+    usage: /summon <number>
   solarise:
     description: Admin panel for SoloArise
     usage: /solarise <subcommand>
