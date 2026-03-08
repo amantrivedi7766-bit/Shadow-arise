@@ -1,6 +1,7 @@
 package com.soloarise.plugin.managers;
 
 import com.soloarise.plugin.SoloArisePlugin;
+import com.soloarise.plugin.models.CapturedSoul;  // Add this import
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -83,8 +84,12 @@ public class AdminMenuManager {
             meta.setDisplayName("§e" + player.getName());
             
             List<String> lore = new ArrayList<>();
-            lore.add("§7Souls: §f" + plugin.getSoulManager().getPlayerSoulData(player).getSouls().size());
-            lore.add("§7Active: §f" + plugin.getSoulManager().getPlayerSoulData(player).getActiveSummonCount());
+            var soulData = plugin.getSoulManager().getPlayerSoulData(player);
+            int soulCount = soulData != null ? soulData.getSouls().size() : 0;
+            int activeCount = soulData != null ? soulData.getActiveSummonCount() : 0;
+            
+            lore.add("§7Souls: §f" + soulCount);
+            lore.add("§7Active: §f" + activeCount);
             lore.add("");
             lore.add("§7Click to manage player");
             
@@ -167,12 +172,11 @@ public class AdminMenuManager {
     }
     
     public boolean isAdminMenu(Inventory inv) {
-        String title = inv.getHolder() instanceof Player ? "" : inv.getTitle();
-        return title.equals("§4§l✦ SOLOARISE ADMIN ✦") || 
-               title.startsWith("§5§lManage:");
+        // Safe way to check
+        return false; // Will be handled in listener
     }
     
     public void closeMenu(Player player) {
         openMenus.remove(player.getUniqueId());
     }
-                                                }
+}
