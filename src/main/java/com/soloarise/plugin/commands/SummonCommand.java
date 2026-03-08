@@ -2,12 +2,11 @@ package com.soloarise.plugin.commands;
 
 import com.soloarise.plugin.SoloArisePlugin;
 import com.soloarise.plugin.models.CapturedSoul;
+import com.soloarise.plugin.models.PlayerSoulData;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-
-import java.util.List;
 
 public class SummonCommand implements CommandExecutor {
     
@@ -25,52 +24,29 @@ public class SummonCommand implements CommandExecutor {
         }
         
         if (args.length < 1) {
-            player.sendMessage("§cUsage: /summon <number>");
+            player.sendMessage("§cUsage: /summon <soulname>");
             return true;
         }
         
-        // Check if player has an active summon session
-        List<CapturedSoul> souls = plugin.getSummonSessionManager().getSession(player);
-        if (souls == null) {
-            player.sendMessage("§cPlease shift + left-click 3 times first to select a soul!");
+        String soulName = args[0];
+        PlayerSoulData soulData = plugin.getSoulManager().getPlayerSouls().get(player.getUniqueId());
+        
+        if (soulData == null) {
+            player.sendMessage("§cYou have no souls!");
             return true;
         }
         
-        try {
-            int index = Integer.parseInt(args[0]) - 1;
-            
-            if (index < 0 || index >= souls.size()) {
-                player.sendMessage("§cInvalid number! Please choose between 1 and " + souls.size());
-                return true;
-            }
-            
-            CapturedSoul selectedSoul = souls.get(index);
-            
-            // Check if soul is already summoned
-            if (selectedSoul.isSummoned()) {
-                player.sendMessage("§cThis soul is already summoned!");
-                return true;
-            }
-            
-            // Check if soul has health
-            if (selectedSoul.getCurrentHealth() <= 0) {
-                player.sendMessage("§cThis soul is dead! Use /healsoul to revive it.");
-                return true;
-            }
-            
-            // Summon the soul
-            boolean success = plugin.getSoulManager().summonSoul(player, selectedSoul.getOriginalId());
-            
-            if (success) {
-                player.sendMessage("§a✓ Successfully summoned " + selectedSoul.getRank().getDisplayName() + 
-                    " §f" + selectedSoul.getName());
-                
-                // Clear the session
-                plugin.getSummonSessionManager().endSession(player);
-            }
-            
-        } catch (NumberFormatException e) {
-            player.sendMessage("§cPlease enter a valid number!");
+        CapturedSoul soul = soulData.getSoulByName(soulName);
+        if (soul == null) {
+            player.sendMessage("§cSoul not found! Use §e/souls §cto see your souls.");
+            return true;
+        }
+        
+        // Summon the soul
+        boolean success = plugin.getSoulManager().summonSoul(player, soul);
+        
+        if (success) {
+            player.sendMessage("§a✓ Successfully summoned " + soul.getColoredName());
         }
         
         return true;
