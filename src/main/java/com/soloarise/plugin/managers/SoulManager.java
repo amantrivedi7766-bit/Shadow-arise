@@ -19,13 +19,13 @@ public class SoulManager {
     private final Map<UUID, Map<String, Boolean>> captureAttempts = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastSummonTime = new ConcurrentHashMap<>();
     
-    // Hunger system tracking
-    private final Map<UUID, Integer> hungerTimer = new ConcurrentHashMap<>();
-    private final Map<UUID, Integer> summonedCount = new ConcurrentHashMap<>();
+    // Kill queue for recent kills
+    private final Map<UUID, List<LivingEntity>> killQueue = new ConcurrentHashMap<>();
     
     public SoulManager(SoloArisePlugin plugin) {
         this.plugin = plugin;
         startHungerDrainTask();
+        startKillQueueCleanup();
     }
     
     // ===== HUNGER SYSTEM =====
@@ -47,7 +47,6 @@ public class SoulManager {
                         
                         if (summonedSouls > 0) {
                             // Calculate hunger drain: 1 point per soul every 20 seconds
-                            // Each soul adds 1 point of hunger drain
                             int totalDrain = summonedSouls;
                             
                             // Apply hunger drain
@@ -69,10 +68,51 @@ public class SoulManager {
         }.runTaskTimer(plugin, 400L, 400L); // Run every 20 seconds (400 ticks)
     }
     
+    /**
+     * Clean up kill queue every minute
+     */
+    private void startKillQueueCleanup() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                long currentTime = System.currentTimeMillis();
+                killQueue.clear(); // Simple clear - in production you'd check timestamps
+            }
+        }.runTaskTimer(plugin, 1200L, 1200L); // Run every minute
+    }
+    
     // ===== CAPTURE SYSTEM =====
     
     /**
-     * Attempt to capture a soul from a killed mob
+     * Add a kill to the capture queue
+     */
+    public void addKillToCaptureQueue(Player killer, LivingEntity victim) {
+        List<LivingEntity> queue = killQueue.computeIfAbsent(killer.getUniqueId(), k -> new ArrayList<>());
+        queue.add(victim);
+        
+        // Keep only last 5 kills
+        if (queue.size() > 5) {
+            queue.remove(0);
+        }
+    }
+    
+    /**
+     * Attempt to capture a soul from the last killed mob
+     */
+    public boolean attemptCapture(Player player) {
+        List<LivingEntity> recentKills = killQueue.get(player.getUniqueId());
+        
+        if (recentKills == null || recentKills.isEmpty()) {
+            player.sendMessage("§cNo recent kills! Kill a mob first.");
+            return false;
+        }
+        
+        LivingEntity target = recentKills.get(recentKills.size() - 1);
+        return attemptCapture(player, target);
+    }
+    
+    /**
+     * Attempt to capture a soul from a specific mob
      */
     public boolean attemptCapture(Player player, LivingEntity target) {
         PlayerSoulData soulData = playerSouls.computeIfAbsent(player.getUniqueId(), 
@@ -261,7 +301,10 @@ public class SoulManager {
         Location spawnLoc = player.getLocation().add(2, 0, 0);
         Entity entity = spawnSoulEntity(spawnLoc, soul, player);
         
-        if (entity == null) return false;
+        if (entity == null) {
+            player.sendMessage("§cCould not summon soul! Invalid mob type.");
+            return false;
+        }
         
         soul.setSummoned(true);
         soul.setSummonedEntity(entity);
@@ -276,11 +319,20 @@ public class SoulManager {
         player.sendMessage("§a✦ Summoned: " + soul.getColoredName() + " §f" + 
             soul.getFormattedName());
         player.sendMessage("§7Ability: §f" + soul.getAbility().getName());
-        player.sendMessage("§7Hunger will drain §c2x faster§7 while souls are active!");
+        player.sendMessage("§7Hunger will drain §c" + getHungerRate(player) + "x faster§7 while souls are active!");
         
         plugin.getScoreboardManager().updateMainScoreboard(player);
         
         return true;
+    }
+    
+    /**
+     * Calculate hunger rate multiplier
+     */
+    private int getHungerRate(Player player) {
+        PlayerSoulData soulData = playerSouls.get(player.getUniqueId());
+        if (soulData == null) return 1;
+        return soulData.getActiveSummonCount();
     }
     
     /**
@@ -344,9 +396,9 @@ public class SoulManager {
                 
                 // Rank-based particles
                 Particle rankParticle = switch(soul.getRank()) {
-                    case NORMAL -> Particle.SPELL;
+                    case NORMAL -> Particle.EFFECT;
                     case WARRIOR -> Particle.CRIT;
-                    case ELITE -> Particle.ENCHANT;
+                    case ELITE -> Particle.ENCHANTED_HIT;
                     case BOSS -> Particle.DRAGON_BREATH;
                     case PLAYER -> Particle.HEART;
                 };
@@ -389,6 +441,14 @@ public class SoulManager {
                     if (mob.getHealth() <= 0) {
                         soul.setSummoned(false);
                         soul.setSummonedEntity(null);
+                        
+                        // Notify owner
+                        Player owner = Bukkit.getPlayer(soulData.getPlayerId());
+                        if (owner != null) {
+                            owner.sendMessage("§c§l❌ " + soul.getFormattedName() + " has died!");
+                            owner.sendMessage("§7Use §e/soulheal " + soul.getFormattedName() + 
+                                " §7with diamonds to revive it.");
+                        }
                     }
                 }
             }
@@ -424,6 +484,33 @@ public class SoulManager {
     }
     
     /**
+     * Recall a specific soul
+     */
+    public boolean recallSoul(Player player, String soulName) {
+        PlayerSoulData soulData = playerSouls.get(player.getUniqueId());
+        if (soulData == null) return false;
+        
+        CapturedSoul soul = soulData.getSoulByName(soulName);
+        if (soul == null) return false;
+        
+        if (!soul.isSummoned()) {
+            player.sendMessage("§cThis soul is not summoned!");
+            return false;
+        }
+        
+        if (soul.getSummonedEntity() != null) {
+            soul.getSummonedEntity().remove();
+        }
+        soul.setSummoned(false);
+        soul.setSummonedEntity(null);
+        
+        player.sendMessage("§d✦ Recalled " + soul.getFormattedName());
+        plugin.getScoreboardManager().updateMainScoreboard(player);
+        
+        return true;
+    }
+    
+    /**
      * Recall all souls for all players
      */
     public void recallAllSouls() {
@@ -444,7 +531,12 @@ public class SoulManager {
         CapturedSoul soul = soulData.getSoulByName(soulName);
         if (soul == null) return false;
         
-        soul.healFully();
+        soul.setCurrentHealth(soul.getMaxHealth());
+        
+        // Update summoned entity
+        if (soul.isSummoned() && soul.getSummonedEntity() instanceof LivingEntity living) {
+            living.setHealth(soul.getMaxHealth());
+        }
         
         player.sendMessage("§a✓ " + soul.getFormattedName() + " has been fully healed!");
         plugin.getScoreboardManager().updateMainScoreboard(player);
@@ -453,26 +545,50 @@ public class SoulManager {
     }
     
     /**
+     * Heal all souls for a player
+     */
+    public void healAllSouls(Player player) {
+        PlayerSoulData soulData = playerSouls.get(player.getUniqueId());
+        if (soulData == null) return;
+        
+        soulData.healAll();
+        player.sendMessage("§a✓ All your souls have been healed!");
+        plugin.getScoreboardManager().updateMainScoreboard(player);
+    }
+    
+    /**
      * Heal all souls for all players
      */
     public void healAllSouls() {
         for (PlayerSoulData soulData : playerSouls.values()) {
-            for (CapturedSoul soul : soulData.getSouls()) {
-                soul.setCurrentHealth(soul.getMaxHealth());
-                
-                // Update summoned entities
-                if (soul.isSummoned() && soul.getSummonedEntity() != null) {
-                    if (soul.getSummonedEntity() instanceof LivingEntity living) {
-                        living.setHealth(soul.getMaxHealth());
-                    }
-                }
-            }
+            soulData.healAll();
         }
         
         Bukkit.broadcastMessage("§a§l✦ All souls have been healed by an admin!");
     }
     
     // ===== CLEAR SYSTEM =====
+    
+    /**
+     * Clear all souls for a player
+     */
+    public void clearSouls(Player player) {
+        PlayerSoulData soulData = playerSouls.get(player.getUniqueId());
+        if (soulData == null) return;
+        
+        // Recall summoned souls first
+        for (CapturedSoul soul : soulData.getSummonedSouls()) {
+            if (soul.getSummonedEntity() != null) {
+                soul.getSummonedEntity().remove();
+            }
+        }
+        
+        playerSouls.remove(player.getUniqueId());
+        captureAttempts.remove(player.getUniqueId());
+        
+        player.sendMessage("§c✗ All your souls have been cleared!");
+        plugin.getScoreboardManager().updateMainScoreboard(player);
+    }
     
     /**
      * Clear all souls for all players
@@ -484,6 +600,7 @@ public class SoulManager {
         // Clear all soul data
         playerSouls.clear();
         captureAttempts.clear();
+        killQueue.clear();
         
         // Update all scoreboards
         for (Player player : Bukkit.getOnlinePlayers()) {
@@ -491,6 +608,100 @@ public class SoulManager {
         }
         
         Bukkit.broadcastMessage("§c§l✦ All souls have been cleared by an admin!");
+    }
+    
+    // ===== RELEASE SYSTEM =====
+    
+    /**
+     * Release a specific soul
+     */
+    public boolean releaseSoul(Player player, String soulName) {
+        PlayerSoulData soulData = playerSouls.get(player.getUniqueId());
+        if (soulData == null) return false;
+        
+        CapturedSoul soul = soulData.getSoulByName(soulName);
+        if (soul == null) return false;
+        
+        // Remove summoned entity if active
+        if (soul.isSummoned() && soul.getSummonedEntity() != null) {
+            soul.getSummonedEntity().remove();
+        }
+        
+        boolean removed = soulData.removeSoul(soul.getSoulId());
+        
+        if (removed) {
+            player.sendMessage("§c✗ Released soul: " + soul.getFormattedName());
+            plugin.getScoreboardManager().updateMainScoreboard(player);
+        }
+        
+        return removed;
+    }
+    
+    /**
+     * Release all souls of a specific type
+     */
+    public int releaseSoulsByType(Player player, String mobType) {
+        PlayerSoulData soulData = playerSouls.get(player.getUniqueId());
+        if (soulData == null) return 0;
+        
+        List<CapturedSoul> toRemove = new ArrayList<>();
+        for (CapturedSoul soul : soulData.getSouls()) {
+            if (soul.getMobType().equalsIgnoreCase(mobType)) {
+                toRemove.add(soul);
+            }
+        }
+        
+        for (CapturedSoul soul : toRemove) {
+            if (soul.isSummoned() && soul.getSummonedEntity() != null) {
+                soul.getSummonedEntity().remove();
+            }
+            soulData.removeSoul(soul.getSoulId());
+        }
+        
+        if (!toRemove.isEmpty()) {
+            player.sendMessage("§c✗ Released " + toRemove.size() + " " + formatMobName(mobType) + " souls");
+            plugin.getScoreboardManager().updateMainScoreboard(player);
+        }
+        
+        return toRemove.size();
+    }
+    
+    // ===== ATTACK SYSTEM =====
+    
+    /**
+     * Command souls to attack a player
+     */
+    public boolean attackPlayer(Player attacker, String targetName) {
+        Player target = Bukkit.getPlayer(targetName);
+        if (target == null) {
+            attacker.sendMessage("§cPlayer not found!");
+            return false;
+        }
+        
+        PlayerSoulData soulData = playerSouls.get(attacker.getUniqueId());
+        if (soulData == null) {
+            attacker.sendMessage("§cYou have no souls!");
+            return false;
+        }
+        
+        List<CapturedSoul> summoned = soulData.getSummonedSouls();
+        if (summoned.isEmpty()) {
+            attacker.sendMessage("§cYou have no summoned souls!");
+            return false;
+        }
+        
+        int attackCount = 0;
+        for (CapturedSoul soul : summoned) {
+            if (soul.getSummonedEntity() instanceof Mob mob) {
+                mob.setTarget(target);
+                attackCount++;
+            }
+        }
+        
+        attacker.sendMessage("§e⚔ " + attackCount + " souls are now attacking " + target.getName());
+        target.sendMessage("§c⚠ " + attacker.getName() + "'s souls are attacking you!");
+        
+        return true;
     }
     
     // ===== UTILITY METHODS =====
@@ -532,11 +743,10 @@ public class SoulManager {
     }
     
     /**
-     * Get recent kill for chat capture
+     * Mark for capture (for PlayerDeathListener)
      */
-    public void attemptChatCapture(Player player) {
-        // This would need a kill queue - simplified version
-        player.sendMessage("§cKill a mob first, then type /arise!");
+    public void markForCapture(Player killer, Player victim) {
+        addKillToCaptureQueue(killer, victim);
     }
     
     // ===== GETTERS =====
@@ -548,4 +758,8 @@ public class SoulManager {
     public PlayerSoulData getPlayerSoulData(Player player) {
         return playerSouls.get(player.getUniqueId());
     }
-            }
+    
+    public List<LivingEntity> getRecentKills(Player player) {
+        return killQueue.getOrDefault(player.getUniqueId(), new ArrayList<>());
+    }
+}
