@@ -1,7 +1,7 @@
 package com.soloarise.plugin.managers;
 
 import com.soloarise.plugin.SoloArisePlugin;
-import com.soloarise.plugin.models.Ability;  // Fixed import
+import com.soloarise.plugin.models.Ability;
 import com.soloarise.plugin.models.CapturedSoul;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -252,7 +252,7 @@ public class AbilityManager {
         switch(mobType) {
             case "zombie":
                 target.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 100, 1));
-                mob.getWorld().spawnParticle(Particle.SPELL_MOB, target.getLocation(), 20, 0.5, 0.5, 0.5, 1);
+                mob.getWorld().spawnParticle(Particle.ENTITY_EFFECT, target.getLocation(), 20, 0.5, 0.5, 0.5, 1);
                 break;
                 
             case "skeleton":
@@ -264,7 +264,7 @@ public class AbilityManager {
                 
             case "spider":
                 target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 100, 2));
-                mob.getWorld().spawnParticle(Particle.BLOCK_CRACK, target.getLocation(), 30, 0.5, 0.5, 0.5, 0.1);
+                mob.getWorld().spawnParticle(Particle.BLOCK, target.getLocation(), 30, 0.5, 0.5, 0.5, 0.1);
                 break;
                 
             case "creeper":
@@ -320,7 +320,7 @@ public class AbilityManager {
         cooldowns.put(mob.getUniqueId(), System.currentTimeMillis());
         
         // Visual effect
-        mob.getWorld().spawnParticle(Particle.ENCHANT, mob.getLocation(), 20, 0.5, 0.5, 0.5, 1);
+        mob.getWorld().spawnParticle(Particle.ENCHANTED_HIT, mob.getLocation(), 20, 0.5, 0.5, 0.5, 1);
     }
     
     public Ability getAbility(String mobType) {
@@ -330,4 +330,4 @@ public class AbilityManager {
     public boolean hasAbility(String mobType) {
         return abilities.containsKey(mobType.toLowerCase());
     }
-        }
+                                         }
