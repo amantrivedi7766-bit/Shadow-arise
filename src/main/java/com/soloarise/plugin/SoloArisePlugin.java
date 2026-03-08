@@ -17,7 +17,7 @@ public class SoloArisePlugin extends JavaPlugin {
     private ParticleManager particleManager;
     private AbilityManager abilityManager;
     private HeadManager headManager;
-    private AdminMenuManager adminMenuManager;
+    private AdminMenuManager adminMenuManager;  // Now fixed
     
     @Override
     public void onEnable() {
@@ -33,7 +33,7 @@ public class SoloArisePlugin extends JavaPlugin {
         particleManager = new ParticleManager(this);
         abilityManager = new AbilityManager(this);
         headManager = new HeadManager(this);
-        adminMenuManager = new AdminMenuManager(this);
+        adminMenuManager = new AdminMenuManager(this);  // Now fixed
         
         // Register commands
         registerCommands();
@@ -67,7 +67,7 @@ public class SoloArisePlugin extends JavaPlugin {
         getCommand("soulheal").setExecutor(new SoulHealCommand(this));
         getCommand("souls").setExecutor(new SoulsCommand(this));
         
-        // Admin command - FIXED: now using "soloarise" not "solarise"
+        // Admin command
         getCommand("soloarise").setExecutor(new AdminCommand(this));
     }
     
