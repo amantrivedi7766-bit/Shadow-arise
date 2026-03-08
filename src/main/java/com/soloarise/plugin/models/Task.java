@@ -1,33 +1,54 @@
 package com.soloarise.plugin.models;
 
 import org.bukkit.entity.Player;
+import java.util.UUID;
 
 public class Task {
     
-    private final int id;
+    private final UUID id;
     private final String name;
-    private final TaskCompletionChecker completionCondition;
+    private final String description;  // Add this field
+    private final TaskType type;
+    private final int requirement;
+    private final long duration;
     
-    public Task(int id, String name, TaskCompletionChecker completionCondition) {
-        this.id = id;
+    public Task(String name, String description, TaskType type, int requirement, long duration) {
+        this.id = UUID.randomUUID();
         this.name = name;
-        this.completionCondition = completionCondition;
+        this.description = description;  // Initialize
+        this.type = type;
+        this.requirement = requirement;
+        this.duration = duration;
     }
     
-    public int getId() {
-        return id;
-    }
-    
-    public String getName() {
-        return name;
-    }
+    public UUID getId() { return id; }
+    public String getName() { return name; }
+    public String getDescription() { return description; }  // Add this getter
+    public TaskType getType() { return type; }
+    public int getRequirement() { return requirement; }
+    public long getDuration() { return duration; }
     
     public boolean isComplete(Player player, ArisePlayer arisePlayer) {
-        return completionCondition.isComplete(player, arisePlayer);
+        switch(type) {
+            case KILL_MOBS:
+                return arisePlayer.getMobsKilled() >= requirement;
+            case MINE_BLOCKS:
+                return arisePlayer.getBlocksMined() >= requirement;
+            case COLLECT_SOULS:
+                return arisePlayer.getSoulsCollected() >= requirement;
+            case TRAVEL_DISTANCE:
+                return arisePlayer.getDistanceTraveled() >= requirement;
+            default:
+                return false;
+        }
     }
     
-    @Override
-    public String toString() {
-        return "Task{id=" + id + ", name='" + name + "'}";
+    public enum TaskType {
+        KILL_MOBS,
+        MINE_BLOCKS,
+        COLLECT_SOULS,
+        TRAVEL_DISTANCE,
+        CRAFT_ITEMS,
+        FISH_ITEMS
     }
 }
