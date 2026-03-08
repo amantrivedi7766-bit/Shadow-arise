@@ -27,6 +27,9 @@ commands:
   summon:
     description: Summon a selected soul
     usage: /summon <number>
+  healsoul:
+    description: Heal a dead soul
+    usage: /healsoul <soulname>
   solarise:
     description: Admin panel for SoloArise
     usage: /solarise <subcommand>
