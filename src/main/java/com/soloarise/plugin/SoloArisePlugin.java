@@ -2,9 +2,10 @@ package com.soloarise.plugin;
 
 import com.soloarise.plugin.commands.*;
 import com.soloarise.plugin.commands.admin.AdminPanelCommand;
+import com.soloarise.plugin.commands.tabcompleters.AdminTabCompleter;
+import com.soloarise.plugin.commands.tabcompleters.SummonTabCompleter;
 import com.soloarise.plugin.listeners.*;
 import com.soloarise.plugin.managers.*;
-import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class SoloArisePlugin extends JavaPlugin {
@@ -44,12 +45,12 @@ public class SoloArisePlugin extends JavaPlugin {
         // Register listeners
         registerListeners();
         
-        // Start schedulers
-        startSchedulers();
+        // Start scheduler for boss bar updates
+        startBossBarScheduler();
         
-        getLogger().info("§a✓ SoloArisePlugin has been enabled!");
-        getLogger().info("§7Version: 1.0.0");
-        getLogger().info("§7Author: YourName");
+        getLogger().info("SoloArisePlugin has been enabled!");
+        getLogger().info("Version: 1.0.0");
+        getLogger().info("Made for Minecraft 1.21.4");
     }
     
     @Override
@@ -60,17 +61,15 @@ public class SoloArisePlugin extends JavaPlugin {
         }
         
         // Recall all summoned souls
-        if (soulManager != null && playerManager != null) {
-            Bukkit.getOnlinePlayers().forEach(player -> {
-                soulManager.recallAllSouls(player);
-            });
+        if (soulManager != null) {
+            soulManager.recallAllSouls();
         }
         
-        getLogger().info("§c✗ SoloArisePlugin has been disabled!");
+        getLogger().info("SoloArisePlugin has been disabled!");
     }
     
     private void registerCommands() {
-        // Player commands
+        // Main commands
         getCommand("arise").setExecutor(new AriseCommand(this));
         getCommand("arisework").setExecutor(new AriseWorkCommand(this));
         getCommand("soulrelease").setExecutor(new SoulReleaseCommand(this));
@@ -79,13 +78,9 @@ public class SoloArisePlugin extends JavaPlugin {
         getCommand("soultask").setExecutor(new SoulTaskCommand(this));
         getCommand("summon").setExecutor(new SummonCommand(this));
         getCommand("healsoul").setExecutor(new HealSoulCommand(this));
-        
-        // Admin commands
         getCommand("solarise").setExecutor(new AdminPanelCommand(this));
         
-        // Command completers
-        getCommand("soulrelease").setTabCompleter(new SoulTabCompleter(this));
-        getCommand("soultask").setTabCompleter(new SoulTabCompleter(this));
+        // Register tab completers
         getCommand("summon").setTabCompleter(new SummonTabCompleter(this));
         getCommand("solarise").setTabCompleter(new AdminTabCompleter(this));
     }
@@ -95,9 +90,9 @@ public class SoloArisePlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerQuitListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerDeathListener(this), this);
-        getServer().getPluginManager().registerEvents(new PlayerInteractListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerMoveListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerChatListener(this), this);
+        getServer().getPluginManager().registerEvents(new PlayerInteractListener(this), this);
         
         // Entity listeners
         getServer().getPluginManager().registerEvents(new MobDeathListener(this), this);
@@ -111,23 +106,27 @@ public class SoloArisePlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new InventoryListener(this), this);
     }
     
-    private void startSchedulers() {
-        // Auto-save every 5 minutes
-        Bukkit.getScheduler().runTaskTimer(this, () -> {
-            databaseManager.saveAll();
-            getLogger().info("Auto-saved player data");
-        }, 6000L, 6000L); // 5 minutes = 6000 ticks
+    private void startBossBarScheduler() {
+        // Update boss bars every second
+        getServer().getScheduler().runTaskTimer(this, () -> {
+            if (taskManager != null) {
+                taskManager.updateAllBossBars();
+            }
+        }, 20L, 20L);
         
         // Update scoreboards every 2 seconds
-        Bukkit.getScheduler().runTaskTimer(this, () -> {
-            scoreboardManager.updateAllScoreboards();
-        }, 40L, 40L); // 2 seconds = 40 ticks
+        getServer().getScheduler().runTaskTimer(this, () -> {
+            if (scoreboardManager != null) {
+                scoreboardManager.updateAllScoreboards();
+            }
+        }, 40L, 40L);
         
-        // Clean up old data every 10 minutes
-        Bukkit.getScheduler().runTaskTimer(this, () -> {
-            // Clean up summon sessions
-            // This is handled in SummonSessionManager
-        }, 12000L, 12000L); // 10 minutes = 12000 ticks
+        // Check for expired tasks every minute
+        getServer().getScheduler().runTaskTimer(this, () -> {
+            if (playerManager != null) {
+                playerManager.checkExpiredTasks();
+            }
+        }, 1200L, 1200L);
     }
     
     // Getters for all managers
