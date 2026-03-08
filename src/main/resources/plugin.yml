@@ -9,24 +9,43 @@ commands:
   arise:
     description: Attempt to capture the last mob you killed's soul
     usage: /arise
+    permission: soloarise.use
+    
   soulcome:
     description: Recall all summoned souls
     usage: /soulcome
+    permission: soloarise.use
+    
   soulrelease:
     description: Release a captured soul
     usage: /soulrelease <soulname>
+    permission: soloarise.use
+    
   soulability:
     description: View soul abilities
     usage: /soulability <soulname>
-  solarise:
-    description: Admin panel
-    usage: /solarise
-    permission: solarise.admin
+    permission: soloarise.use
+    
+  soulheal:
+    description: Heal a dead soul with diamonds
+    usage: /soulheal <soulname>
+    permission: soloarise.use
+    
+  souls:
+    description: List all your souls
+    usage: /souls
+    permission: soloarise.use
+    
+  soloarise:
+    description: Admin command for SoloArise
+    usage: /soloarise <reload/give/remove/list>
+    permission: soloarise.admin
 
 permissions:
-  solarise.use:
+  soloarise.use:
     description: Use basic soul commands
     default: true
-  solarise.admin:
+    
+  soloarise.admin:
     description: Use admin commands
     default: op
