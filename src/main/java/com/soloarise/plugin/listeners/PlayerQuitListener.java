@@ -32,10 +32,6 @@ public class PlayerQuitListener implements Listener {
             }
         }
         
-        // Clean up sessions
-        plugin.getSummonSessionManager().endSession(player);
-        
-        // Remove from active tasks
-        plugin.getPlayerManager().removeActiveTask(player.getUniqueId());
+        // No SummonSessionManager to clean up
     }
 }
