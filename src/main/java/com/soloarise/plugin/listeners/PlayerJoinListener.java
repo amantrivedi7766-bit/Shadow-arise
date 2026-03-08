@@ -18,20 +18,18 @@ public class PlayerJoinListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         
-        // Check if player is new (first join)
-        if (!player.hasPlayedBefore()) {
-            plugin.getPlayerManager().assignTask(player);
-        }
-        
         // Load player data
-        plugin.getPlayerManager().getPlayer(player);
+        plugin.getSoulManager().getPlayerSouls().putIfAbsent(
+            player.getUniqueId(), 
+            new com.soloarise.plugin.models.PlayerSoulData(player.getUniqueId())
+        );
+        
+        // Welcome message
+        player.sendMessage("§5§l✦ SOLO ARISE ✦");
+        player.sendMessage("§7Kill mobs and use §e/arise §7to capture their souls!");
+        player.sendMessage("§7Crouch §e5 times §7to summon your souls!");
         
         // Setup main scoreboard
         plugin.getScoreboardManager().updateMainScoreboard(player);
-        
-        // Setup task scoreboard if player has active task
-        if (plugin.getPlayerManager().getPlayer(player).hasActiveTask()) {
-            plugin.getScoreboardManager().showTaskScoreboard(player);
-        }
     }
 }
