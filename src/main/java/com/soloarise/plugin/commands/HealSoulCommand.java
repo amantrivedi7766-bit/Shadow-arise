@@ -7,7 +7,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
-import org.buk.command.CommandSender;
+import org.bukkit.command.CommandSender;  // Fixed import
 import org.bukkit.inventory.ItemStack;
 
 public class HealSoulCommand implements CommandExecutor {
@@ -33,7 +33,7 @@ public class HealSoulCommand implements CommandExecutor {
         String soulName = args[0];
         PlayerSoulData soulData = plugin.getSoulManager().getPlayerSouls().get(player.getUniqueId());
         
-        if (soulData == null) {
+        if (soulData == null || soulData.getSouls().isEmpty()) {
             player.sendMessage("§cYou have no souls!");
             return true;
         }
@@ -44,9 +44,15 @@ public class HealSoulCommand implements CommandExecutor {
             return true;
         }
         
-        // Check if player has diamonds for healing
-        int diamondsNeeded = (int) ((soul.getMaxHealth() - soul.getCurrentHealth()) / 10);
-        if (diamondsNeeded < 1) diamondsNeeded = 1;
+        // Check if soul needs healing
+        if (soul.getCurrentHealth() >= soul.getMaxHealth()) {
+            player.sendMessage("§aThis soul is already at full health!");
+            return true;
+        }
+        
+        // Calculate diamonds needed (1 diamond per 10 health)
+        int healthNeeded = (int) (soul.getMaxHealth() - soul.getCurrentHealth());
+        int diamondsNeeded = Math.max(1, (int) Math.ceil(healthNeeded / 10.0));
         
         if (!player.getInventory().contains(Material.DIAMOND, diamondsNeeded)) {
             player.sendMessage("§cYou need " + diamondsNeeded + " diamonds to heal this soul!");
@@ -58,6 +64,13 @@ public class HealSoulCommand implements CommandExecutor {
         
         // Heal soul
         soul.setCurrentHealth(soul.getMaxHealth());
+        
+        // If soul is summoned, update its health
+        if (soul.isSummoned() && soul.getSummonedEntity() != null) {
+            if (soul.getSummonedEntity() instanceof org.bukkit.entity.LivingEntity living) {
+                living.setHealth(soul.getMaxHealth());
+            }
+        }
         
         player.sendMessage("§a✓ Soul " + soul.getName() + " has been fully healed!");
         plugin.getScoreboardManager().updateMainScoreboard(player);
