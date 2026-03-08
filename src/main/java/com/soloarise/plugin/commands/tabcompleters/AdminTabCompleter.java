@@ -1,5 +1,6 @@
 package com.soloarise.plugin.commands.tabcompleters;
 
+import com.soloarise.plugin.SoloArisePlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -13,9 +14,15 @@ import java.util.stream.Collectors;
 
 public class AdminTabCompleter implements TabCompleter {
     
+    private final SoloArisePlugin plugin;  // Add field
     private final List<String> subCommands = Arrays.asList(
         "reload", "givepower", "removesoul", "resettask", "view", "healall", "broadcast"
     );
+    
+    // Add constructor with plugin parameter
+    public AdminTabCompleter(SoloArisePlugin plugin) {
+        this.plugin = plugin;
+    }
     
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
