@@ -1,7 +1,7 @@
 package com.soloarise.plugin;
 
 import com.soloarise.plugin.commands.*;
-import com.soloarise.plugin.commands.admin.AdminChestCommand;
+import com.soloarise.plugin.commands.admin.AdminCommand;
 import com.soloarise.plugin.listeners.*;
 import com.soloarise.plugin.managers.*;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -59,11 +59,16 @@ public class SoloArisePlugin extends JavaPlugin {
     }
     
     private void registerCommands() {
+        // Player commands
         getCommand("arise").setExecutor(new AriseCommand(this));
         getCommand("soulcome").setExecutor(new SoulComeCommand(this));
         getCommand("soulrelease").setExecutor(new SoulReleaseCommand(this));
         getCommand("soulability").setExecutor(new SoulAbilityCommand(this));
-        getCommand("solarise").setExecutor(new AdminChestCommand(this));
+        getCommand("soulheal").setExecutor(new SoulHealCommand(this));
+        getCommand("souls").setExecutor(new SoulsCommand(this));
+        
+        // Admin command - FIXED: now using "soloarise" not "solarise"
+        getCommand("soloarise").setExecutor(new AdminCommand(this));
     }
     
     private void registerListeners() {
