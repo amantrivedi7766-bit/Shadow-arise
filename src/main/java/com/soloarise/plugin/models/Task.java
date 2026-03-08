@@ -7,15 +7,15 @@ public class Task {
     
     private final UUID id;
     private final String name;
-    private final String description;  // Add this field
+    private final String description;
     private final TaskType type;
     private final int requirement;
-    private final long duration;
+    private final long duration; // in milliseconds
     
     public Task(String name, String description, TaskType type, int requirement, long duration) {
         this.id = UUID.randomUUID();
         this.name = name;
-        this.description = description;  // Initialize
+        this.description = description;
         this.type = type;
         this.requirement = requirement;
         this.duration = duration;
@@ -23,7 +23,7 @@ public class Task {
     
     public UUID getId() { return id; }
     public String getName() { return name; }
-    public String getDescription() { return description; }  // Add this getter
+    public String getDescription() { return description; }
     public TaskType getType() { return type; }
     public int getRequirement() { return requirement; }
     public long getDuration() { return duration; }
@@ -31,13 +31,17 @@ public class Task {
     public boolean isComplete(Player player, ArisePlayer arisePlayer) {
         switch(type) {
             case KILL_MOBS:
-                return arisePlayer.getMobsKilled() >= requirement;
+                return arisePlayer.getMobsKilled() >= requirement;  // Fixed method name
             case MINE_BLOCKS:
                 return arisePlayer.getBlocksMined() >= requirement;
             case COLLECT_SOULS:
-                return arisePlayer.getSoulsCollected() >= requirement;
+                return arisePlayer.getSoulsCollected() >= requirement;  // Fixed method name
             case TRAVEL_DISTANCE:
                 return arisePlayer.getDistanceTraveled() >= requirement;
+            case CRAFT_ITEMS:
+                return arisePlayer.getItemsCrafted() >= requirement;
+            case FISH_ITEMS:
+                return arisePlayer.getFishCaught() >= requirement;
             default:
                 return false;
         }
