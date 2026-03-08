@@ -2,6 +2,7 @@ package com.soloarise.plugin.managers;
 
 import com.soloarise.plugin.SoloArisePlugin;
 import com.soloarise.plugin.models.*;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
@@ -32,10 +33,12 @@ public class PlayerManager {
         ArisePlayer arisePlayer = getPlayer(player);
         
         if (arisePlayer.hasArisePower()) {
+            player.sendMessage("§cYou already have the Arise power!");
             return;
         }
         
         if (activeTasks.contains(player.getUniqueId())) {
+            player.sendMessage("§cYou already have an active task!");
             return;
         }
         
@@ -53,6 +56,9 @@ public class PlayerManager {
             
             player.sendMessage("§a✦ New Task Assigned: §e" + task.getName());
             player.sendMessage("§7Complete this task within 1 hour to unlock Arise power!");
+            player.sendMessage("§7Task: §f" + task.getDescription());
+        } else {
+            player.sendMessage("§cNo tasks available right now!");
         }
     }
     
@@ -60,6 +66,7 @@ public class PlayerManager {
         ArisePlayer arisePlayer = getPlayer(player);
         
         if (!arisePlayer.hasActiveTask()) {
+            player.sendMessage("§cYou don't have an active task!");
             return false;
         }
         
@@ -74,6 +81,7 @@ public class PlayerManager {
             player.sendMessage("§cYour task has expired!");
             activeTasks.remove(player.getUniqueId());
             arisePlayer.setCurrentTask(null);
+            plugin.getTaskManager().removeTaskBossBar(player);
             plugin.getScoreboardManager().removeTaskScoreboard(player);
             return false;
         }
@@ -106,6 +114,10 @@ public class PlayerManager {
             @Override
             public void run() {
                 if (tick >= 100) { // 5 seconds
+                    // Final effects
+                    player.getWorld().spawnParticle(Particle.FLASH, player.getLocation(), 1);
+                    player.getWorld().playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
+                    
                     cancel();
                     player.sendMessage("§a✓ You are now an Awakened being!");
                     plugin.getScoreboardManager().updateMainScoreboard(player);
@@ -129,13 +141,12 @@ public class PlayerManager {
                     double z = Math.sin(particleAngle) * radius;
                     
                     Location particleLoc = player.getLocation().clone().add(x, 1, z);
-                    player.getWorld().spawnParticle(Particle.SPELL_WITCH, particleLoc, 5, 0, 0, 0, 0.5);
+                    player.getWorld().spawnParticle(Particle.WITCH, particleLoc, 5, 0, 0, 0, 0.5);
                     player.getWorld().spawnParticle(Particle.PORTAL, particleLoc, 10, 0.2, 0.2, 0.2, 0.1);
                 }
                 
                 // Cinematic effects
-                player.getWorld().spawnParticle(Particle.FLASH, player.getLocation(), 1);
-                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                player.getWorld().spawnParticle(Particle.END_ROD, player.getLocation().add(0, 2, 0), 20, 0.5, 0.5, 0.5, 0.1);
                 
                 if (tick % 10 == 0) {
                     player.getWorld().playSound(player.getLocation(), Sound.BLOCK_BEACON_POWER_SELECT, 1.0f, 1.0f);
@@ -143,10 +154,38 @@ public class PlayerManager {
                 
                 tick++;
             }
-        }.runTaskTimer(plugin, 0L, 2L); // Run every 2 ticks
+        }.runTaskTimer(plugin, 0L, 2L);
     }
     
     public void removeActiveTask(UUID playerId) {
         activeTasks.remove(playerId);
+    }
+    
+    public boolean hasActiveTask(Player player) {
+        return activeTasks.contains(player.getUniqueId());
+    }
+    
+    public void checkExpiredTasks() {
+        long currentTime = System.currentTimeMillis();
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            ArisePlayer arisePlayer = getPlayer(player);
+            if (arisePlayer.hasActiveTask()) {
+                if (currentTime - arisePlayer.getTaskStartTime() > 3600000) { // 1 hour
+                    player.sendMessage("§cYour task has expired!");
+                    arisePlayer.setCurrentTask(null);
+                    removeActiveTask(player.getUniqueId());
+                    plugin.getTaskManager().removeTaskBossBar(player);
+                    plugin.getScoreboardManager().removeTaskScoreboard(player);
+                }
+            }
+        }
+    }
+    
+    public void saveAllPlayers() {
+        // Save to database if implemented
+    }
+    
+    public void loadAllPlayers() {
+        // Load from database if implemented
     }
 }
