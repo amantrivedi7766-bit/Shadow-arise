@@ -11,25 +11,30 @@ public class PlayerSoulData {
     private static final int MAX_SOULS = 10000;
     private int totalSoulsCaptured = 0;
     private int bossSoulsCaptured = 0;
-    private long lastSummonTime = 0;
     
     public PlayerSoulData(UUID playerId) {
         this.playerId = playerId;
     }
     
-    // Soul management
+    // Check methods
+    public boolean hasMobType(String mobType) {
+        return souls.values().stream()
+            .anyMatch(s -> s.getMobType().equalsIgnoreCase(mobType));
+    }
+    
     public boolean hasSoul(UUID soulId) {
         return souls.containsKey(soulId);
     }
     
     public boolean hasSoulByName(String name) {
         return souls.values().stream()
-            .anyMatch(s -> s.getName().equalsIgnoreCase(name));
+            .anyMatch(s -> s.getFormattedName().equalsIgnoreCase(name));
     }
     
+    // Add/Remove methods
     public void addSoul(CapturedSoul soul) {
         if (souls.size() < MAX_SOULS) {
-            souls.put(soul.getOriginalId(), soul);
+            souls.put(soul.getSoulId(), soul);
             totalSoulsCaptured++;
             
             if (soul.getRank() == SoulRank.BOSS) {
@@ -48,25 +53,29 @@ public class PlayerSoulData {
     
     public boolean removeSoulByName(String name) {
         Optional<CapturedSoul> soul = souls.values().stream()
-            .filter(s -> s.getName().equalsIgnoreCase(name))
+            .filter(s -> s.getFormattedName().equalsIgnoreCase(name))
             .findFirst();
         
         if (soul.isPresent()) {
-            return removeSoul(soul.get().getOriginalId());
+            return removeSoul(soul.get().getSoulId());
         }
         return false;
     }
     
-    // Getters
+    // Get methods
     public CapturedSoul getSoulById(UUID soulId) {
         return souls.get(soulId);
     }
     
     public CapturedSoul getSoulByName(String name) {
         return souls.values().stream()
-            .filter(s -> s.getName().equalsIgnoreCase(name))
+            .filter(s -> s.getFormattedName().equalsIgnoreCase(name))
             .findFirst()
             .orElse(null);
+    }
+    
+    public CapturedSoul getSoulByFormattedName(String name) {
+        return getSoulByName(name);
     }
     
     public List<CapturedSoul> getSoulsByGroup(String groupName) {
@@ -91,8 +100,15 @@ public class PlayerSoulData {
         return souls.values();
     }
     
+    // Count methods
     public int getSoulCount() {
         return souls.size();
+    }
+    
+    public int getActiveSummonCount() {
+        return (int) souls.values().stream()
+            .filter(CapturedSoul::isSummoned)
+            .count();
     }
     
     public int getTotalSoulsCaptured() {
@@ -101,14 +117,6 @@ public class PlayerSoulData {
     
     public int getBossSoulsCaptured() {
         return bossSoulsCaptured;
-    }
-    
-    public long getLastSummonTime() {
-        return lastSummonTime;
-    }
-    
-    public void setLastSummonTime(long time) {
-        this.lastSummonTime = time;
     }
     
     // Statistics
@@ -124,12 +132,7 @@ public class PlayerSoulData {
         return souls.values().stream().anyMatch(CapturedSoul::isSummoned);
     }
     
-    public int getActiveSummonCount() {
-        return (int) souls.values().stream()
-            .filter(CapturedSoul::isSummoned)
-            .count();
-    }
-    
+    // Actions
     public void recallAll() {
         for (CapturedSoul soul : getSummonedSouls()) {
             if (soul.getSummonedEntity() != null) {
@@ -142,8 +145,19 @@ public class PlayerSoulData {
     
     public void healAll() {
         for (CapturedSoul soul : souls.values()) {
-            soul.healFully();
+            soul.setCurrentHealth(soul.getMaxHealth());
+            
+            // Update summoned entities
+            if (soul.isSummoned() && soul.getSummonedEntity() != null) {
+                if (soul.getSummonedEntity() instanceof org.bukkit.entity.LivingEntity living) {
+                    living.setHealth(soul.getMaxHealth());
+                }
+            }
         }
+    }
+    
+    public UUID getPlayerId() {
+        return playerId;
     }
     
     public boolean isEmpty() {
