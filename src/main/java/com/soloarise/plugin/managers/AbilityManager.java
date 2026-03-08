@@ -1,8 +1,9 @@
 package com.soloarise.plugin.managers;
 
 import com.soloarise.plugin.SoloArisePlugin;
-import com.soloarise.plugin.models.Ability;
+import com.soloarise.plugin.models.Ability;  // Fixed import
 import com.soloarise.plugin.models.CapturedSoul;
+import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
@@ -26,168 +27,211 @@ public class AbilityManager {
     }
     
     private void registerAbilities() {
-        // Zombie - Infection (poison on hit)
+        // Hostile mobs
         abilities.put("zombie", new Ability(
             "Infection",
-            "§7Poisons enemies on hit",
-            5000 // 5 second cooldown
-        ));
-        
-        // Skeleton - Volley (shoots 3 arrows rapidly)
-        abilities.put("skeleton", new Ability(
-            "Volley",
-            "§7Shoots 3 arrows rapidly",
-            3000
-        ));
-        
-        // Spider - Web Trap (slows enemies)
-        abilities.put("spider", new Ability(
-            "Web Trap",
-            "§7Slows enemies with webs",
-            4000
-        ));
-        
-        // Creeper - Explosive Charge (damage area)
-        abilities.put("creeper", new Ability(
-            "Explosive Charge",
-            "§7Explodes when near multiple enemies",
-            10000
-        ));
-        
-        // Enderman - Teleport Strike (teleports behind enemy)
-        abilities.put("enderman", new Ability(
-            "Teleport Strike",
-            "§7Teleports behind enemies",
-            3000
-        ));
-        
-        // Blaze - Fire Storm (shoots fireballs)
-        abilities.put("blaze", new Ability(
-            "Fire Storm",
-            "§7Shoots fireballs at enemies",
+            "Poisons enemies on hit",
             5000
         ));
         
-        // Wither Skeleton - Wither Strike (wither effect)
+        abilities.put("skeleton", new Ability(
+            "Volley",
+            "Shoots 3 arrows rapidly",
+            3000
+        ));
+        
+        abilities.put("spider", new Ability(
+            "Web Trap",
+            "Slows enemies with webs",
+            4000
+        ));
+        
+        abilities.put("creeper", new Ability(
+            "Explosive Charge",
+            "Explodes when near multiple enemies",
+            10000
+        ));
+        
+        abilities.put("enderman", new Ability(
+            "Teleport Strike",
+            "Teleports behind enemies",
+            3000
+        ));
+        
+        abilities.put("blaze", new Ability(
+            "Fire Storm",
+            "Shoots fireballs at enemies",
+            5000
+        ));
+        
         abilities.put("wither_skeleton", new Ability(
             "Wither Strike",
-            "§7Applies wither effect",
+            "Applies wither effect",
             6000
         ));
         
-        // Wolf - Pack Leader (summons temporary wolves)
-        abilities.put("wolf", new Ability(
-            "Pack Leader",
-            "§7Summons temporary wolves",
-            15000
-        ));
-        
-        // Iron Golem - Shield Bash (knocks back enemies)
-        abilities.put("iron_golem", new Ability(
-            "Shield Bash",
-            "§7Knocks back and stuns enemies",
-            8000
-        ));
-        
-        // Ender Dragon - Dragon Breath (area damage)
-        abilities.put("ender_dragon", new Ability(
-            "Dragon Breath",
-            "§7Breathes fire in an area",
-            20000
-        ));
-        
-        // Warden - Sonic Boom (long range attack)
-        abilities.put("warden", new Ability(
-            "Sonic Boom",
-            "§7Long range sonic attack",
-            15000
-        ));
-        
-        // Ghast - Fireball Barrage (multiple fireballs)
         abilities.put("ghast", new Ability(
             "Fireball Barrage",
-            "§7Shoots multiple fireballs",
+            "Shoots multiple fireballs",
             12000
         ));
         
-        // Silverfish - Swarm (summons silverfish)
-        abilities.put("silverfish", new Ability(
-            "Swarm",
-            "§7Summons silverfish allies",
+        abilities.put("magma_cube", new Ability(
+            "Lava Splash",
+            "Splashes lava on enemies",
             8000
         ));
         
-        // Bee - Sting (poison + damage)
-        abilities.put("bee", new Ability(
-            "Sting",
-            "§7Poisons and damages enemies",
+        abilities.put("slime", new Ability(
+            "Split",
+            "Splits into smaller slimes",
+            7000
+        ));
+        
+        abilities.put("witch", new Ability(
+            "Potion Throw",
+            "Throws harmful potions",
+            4000
+        ));
+        
+        abilities.put("pillager", new Ability(
+            "Crossbarrage",
+            "Shoots rapid crossbow shots",
             3000
         ));
         
-        // Dolphin - Speed Boost (gives speed to owner)
-        abilities.put("dolphin", new Ability(
-            "Speed Boost",
-            "§7Gives speed to owner",
-            10000
-        ));
-        
-        // Horse - Charge (dash attack)
-        abilities.put("horse", new Ability(
-            "Charge",
-            "§7Dashes forward damaging enemies",
+        abilities.put("vindicator", new Ability(
+            "Chop",
+            "Powerful axe attack",
             5000
         ));
         
-        // Llama - Spit (ranged attack)
-        abilities.put("llama", new Ability(
-            "Spit",
-            "§7Spits at enemies from range",
+        abilities.put("evoker", new Ability(
+            "Fang Attack",
+            "Summons fangs from ground",
+            8000
+        ));
+        
+        abilities.put("ravager", new Ability(
+            "Stomp",
+            "Stomps the ground damaging area",
+            10000
+        ));
+        
+        abilities.put("warden", new Ability(
+            "Sonic Boom",
+            "Long range sonic attack",
+            15000
+        ));
+        
+        abilities.put("ender_dragon", new Ability(
+            "Dragon Breath",
+            "Breathes fire in an area",
+            20000
+        ));
+        
+        abilities.put("wither", new Ability(
+            "Wither Skulls",
+            "Shoots explosive skulls",
+            15000
+        ));
+        
+        // Passive/Neutral mobs
+        abilities.put("wolf", new Ability(
+            "Pack Leader",
+            "Summons temporary wolves",
+            15000
+        ));
+        
+        abilities.put("iron_golem", new Ability(
+            "Shield Bash",
+            "Knocks back and stuns enemies",
+            8000
+        ));
+        
+        abilities.put("snowman", new Ability(
+            "Snowball Barrage",
+            "Throws snowballs rapidly",
             2000
         ));
         
-        // Parrot - Distraction (distracts enemies)
-        abilities.put("parrot", new Ability(
-            "Distraction",
-            "§7Distracts enemies with sound",
-            4000
-        ));
-        
-        // Fox - Steal (steals items from enemies)
-        abilities.put("fox", new Ability(
-            "Steal",
-            "§7Steals items from enemies",
-            6000
-        ));
-        
-        // Goat - Ram (knocks back enemies)
-        abilities.put("goat", new Ability(
-            "Ram",
-            "§7Knocks back enemies with ram",
-            4000
-        ));
-        
-        // Frog - Leap (jumps on enemies)
-        abilities.put("frog", new Ability(
-            "Leap",
-            "§7Leaps onto enemies",
+        abilities.put("bee", new Ability(
+            "Sting",
+            "Poisons and damages enemies",
             3000
         ));
         
-        // Allay - Collect (collects drops)
-        abilities.put("allay", new Ability(
-            "Collect",
-            "§7Collects item drops for owner",
-            5000
-        ));
-        
-        // Axolotl - Regeneration (heals owner)
-        abilities.put("axolotl", new Ability(
-            "Regeneration",
-            "§7Heals owner over time",
+        abilities.put("dolphin", new Ability(
+            "Speed Boost",
+            "Gives speed to owner",
             10000
         ));
         
-        // 50% of mobs have abilities, rest have default attacks
+        abilities.put("horse", new Ability(
+            "Charge",
+            "Dashes forward damaging enemies",
+            5000
+        ));
+        
+        abilities.put("llama", new Ability(
+            "Spit",
+            "Spits at enemies from range",
+            2000
+        ));
+        
+        abilities.put("parrot", new Ability(
+            "Distraction",
+            "Distracts enemies with sound",
+            4000
+        ));
+        
+        abilities.put("fox", new Ability(
+            "Steal",
+            "Steals items from enemies",
+            6000
+        ));
+        
+        abilities.put("goat", new Ability(
+            "Ram",
+            "Knocks back enemies with ram",
+            4000
+        ));
+        
+        abilities.put("frog", new Ability(
+            "Leap",
+            "Leaps onto enemies",
+            3000
+        ));
+        
+        abilities.put("allay", new Ability(
+            "Collect",
+            "Collects item drops for owner",
+            5000
+        ));
+        
+        abilities.put("axolotl", new Ability(
+            "Regeneration",
+            "Heals owner over time",
+            10000
+        ));
+        
+        abilities.put("turtle", new Ability(
+            "Shell Defense",
+            "Reduces damage taken",
+            8000
+        ));
+        
+        abilities.put("panda", new Ability(
+            "Sneeze",
+            "Sneezes knocking back enemies",
+            5000
+        ));
+        
+        abilities.put("polar_bear", new Ability(
+            "Slash",
+            "Powerful claw attack",
+            6000
+        ));
     }
     
     public void useAbility(Mob mob, CapturedSoul soul, LivingEntity target) {
@@ -218,6 +262,11 @@ public class AbilityManager {
                 }
                 break;
                 
+            case "spider":
+                target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 100, 2));
+                mob.getWorld().spawnParticle(Particle.BLOCK_CRACK, target.getLocation(), 30, 0.5, 0.5, 0.5, 0.1);
+                break;
+                
             case "creeper":
                 // Small explosion
                 mob.getWorld().createExplosion(mob.getLocation(), 2, false, false);
@@ -228,6 +277,7 @@ public class AbilityManager {
                 Location behind = target.getLocation().add(target.getLocation().getDirection().multiply(-2));
                 mob.teleport(behind);
                 mob.setTarget(target);
+                mob.getWorld().spawnParticle(Particle.PORTAL, behind, 30, 0.5, 0.5, 0.5, 0.1);
                 break;
                 
             case "blaze":
@@ -237,15 +287,33 @@ public class AbilityManager {
                 
             case "wither_skeleton":
                 target.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 100, 1));
+                mob.getWorld().spawnParticle(Particle.SOUL, target.getLocation(), 20, 0.5, 0.5, 0.5, 0.1);
                 break;
                 
             case "warden":
                 // Sonic boom effect
                 target.damage(10, mob);
-                target.getWorld().spawnParticle(Particle.SONIC_BOOM, target.getLocation(), 1);
+                mob.getWorld().spawnParticle(Particle.SONIC_BOOM, target.getLocation(), 1);
                 break;
                 
-            // Add more abilities for other mobs
+            case "wolf":
+                // Summon temporary wolf allies
+                for (int i = 0; i < 2; i++) {
+                    Location spawnLoc = mob.getLocation().add(2, 0, 0);
+                    mob.getWorld().spawnEntity(spawnLoc, org.bukkit.entity.EntityType.WOLF);
+                }
+                break;
+                
+            case "bee":
+                target.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 60, 0));
+                target.damage(2, mob);
+                break;
+                
+            case "dolphin":
+                if (target instanceof Player player) {
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 200, 1));
+                }
+                break;
         }
         
         // Set cooldown
@@ -258,4 +326,8 @@ public class AbilityManager {
     public Ability getAbility(String mobType) {
         return abilities.get(mobType.toLowerCase());
     }
-}
+    
+    public boolean hasAbility(String mobType) {
+        return abilities.containsKey(mobType.toLowerCase());
+    }
+        }
