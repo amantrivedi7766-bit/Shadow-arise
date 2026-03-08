@@ -3,6 +3,7 @@ package com.soloarise.plugin.managers;
 import com.soloarise.plugin.SoloArisePlugin;
 import com.soloarise.plugin.models.CapturedSoul;
 import com.soloarise.plugin.models.PlayerSoulData;
+import com.soloarise.plugin.models.SoulRank;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -11,14 +12,13 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class HeadManager {
     
     private final SoloArisePlugin plugin;
-    private final Map<UUID, Inventory> openMenus = new HashMap<>();
+    private final Map<UUID, Inventory> openMenus = new ConcurrentHashMap<>();
     
     public HeadManager(SoloArisePlugin plugin) {
         this.plugin = plugin;
@@ -44,11 +44,9 @@ public class HeadManager {
     
     private ItemStack getMobHead(CapturedSoul soul) {
         ItemStack head;
-        
-        // Try to get custom head based on mob type
         String mobType = soul.getMobType().toLowerCase();
         
-        // Common mob heads
+        // Try to get custom head based on mob type
         switch(mobType) {
             case "zombie":
                 head = new ItemStack(Material.ZOMBIE_HEAD);
@@ -67,7 +65,7 @@ public class HeadManager {
             case "zombified_piglin":
                 head = new ItemStack(Material.PIGLIN_HEAD);
                 break;
-            case "dragon":
+            case "ender_dragon":
                 head = new ItemStack(Material.DRAGON_HEAD);
                 break;
             default:
@@ -85,7 +83,8 @@ public class HeadManager {
         }
         
         ItemMeta meta = head.getItemMeta();
-        meta.setDisplayName(getRankColor(soul) + formatName(soul.getMobType()) + 
+        String rankColor = getRankColor(soul.getRank());
+        meta.setDisplayName(rankColor + soul.getFormattedName() + 
             (soul.isSummoned() ? " §c[SUMMONED]" : ""));
         
         List<String> lore = new ArrayList<>();
@@ -100,9 +99,9 @@ public class HeadManager {
         if (soul.isSummoned()) {
             lore.add("§cAlready summoned!");
             lore.add("§7Use §f/soulcome§7 to recall");
-        } else if (soul.getCurrentHealth() <= 0) {
+        } else if (soul.isDead()) {
             lore.add("§cSoul is dead!");
-            lore.add("§7Use diamonds to heal");
+            lore.add("§7Use §e/soulheal§7 to revive");
         } else {
             lore.add("§aClick to summon!");
         }
@@ -113,26 +112,14 @@ public class HeadManager {
         return head;
     }
     
-    private String getRankColor(CapturedSoul soul) {
-        return switch(soul.getRank()) {
+    private String getRankColor(SoulRank rank) {
+        return switch(rank) {
             case NORMAL -> "§7";
             case WARRIOR -> "§a";
             case ELITE -> "§9";
             case BOSS -> "§c";
             case PLAYER -> "§d";
         };
-    }
-    
-    private String formatName(String mobType) {
-        String[] words = mobType.toLowerCase().split("_");
-        StringBuilder result = new StringBuilder();
-        for (String word : words) {
-            if (word.length() > 0) {
-                result.append(Character.toUpperCase(word.charAt(0)))
-                      .append(word.substring(1)).append(" ");
-            }
-        }
-        return result.toString().trim();
     }
     
     private String getHealthBar(double current, double max) {
@@ -145,5 +132,13 @@ public class HeadManager {
         for (int i = healthBars; i < bars; i++) bar.append("❤");
         
         return bar.toString();
+    }
+    
+    public boolean isSoulMenu(Inventory inv) {
+        return inv.getTitle().equals("§5§l✦ YOUR SOULS ✦");
+    }
+    
+    public void closeMenu(Player player) {
+        openMenus.remove(player.getUniqueId());
     }
 }
